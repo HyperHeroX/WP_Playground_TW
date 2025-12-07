@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WP Playground TW</title>
+    <style>
+        :root { --primary: #2271b1; --bg: #f0f0f1; --sidebar-w: 300px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
+        .sidebar { width: var(--sidebar-w); background: #fff; padding: 20px; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 2; }
+        .brand { font-size: 1.2rem; font-weight: bold; color: #1d2327; margin-bottom: 10px; }
+        .brand span { color: var(--primary); }
+        .control-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; color: #50575e; }
+        .control-group select, .control-group input { width: 100%; padding: 8px; border: 1px solid #8c8f94; border-radius: 4px; }
+        .control-group input:read-only { background: #f0f0f1; color: #646970; }
+        .btn-start { margin-top: auto; background: var(--primary); color: #fff; border: none; padding: 12px; border-radius: 4px; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+        .btn-start:hover { background: #135e96; }
+        .preview { flex: 1; position: relative; background: #dcdcde; display: flex; align-items: center; justify-content: center; }
+        iframe { width: 100%; height: 100%; border: none; display: none; }
+        .status-msg { text-align: center; color: #646970; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 768px) { body { flex-direction: column; overflow: auto; } .sidebar { width: 100%; height: auto; flex-shrink: 0; } .preview { height: 600px; } }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="brand">WP <span>Playground</span> TW</div>
+
+    <div class="control-group">
+        <label>PHP 版本</label>
+        <select id="phpVer">
+            <option value="7.4">7.4</option>
+            <option value="8.0">8.0</option>
+            <option value="8.1" selected>8.1 (推薦)</option>
+            <option value="8.2">8.2</option>
+            <option value="8.3">8.3</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>預設時區</label>
+        <input type="text" value="Asia/Taipei (UTC+8)" readonly>
+    </div>
+
+    <div class="control-group">
+        <label>預設語系</label>
+        <input type="text" value="繁體中文 (zh_TW)" readonly>
+    </div>
+
+    <div class="control-group">
+        <label style="color: #d63638;">⚠️ 啟動須知</label>
+        <p style="font-size: 0.8rem; color: #646970; line-height: 1.4;">
+            系統將自動下載語言包並校正時區，請等待畫面載入完成（約 10-15 秒）。
+        </p>
+    </div>
+
+    <button class="btn-start" onclick="launch()">🚀 啟動環境</button>
+</div>
+
+<div class="preview">
+    <div id="status" class="status-msg">
+        <h2>準備就緒</h2>
+        <p>點擊左側按鈕開始構建環境</p>
+    </div>
+    <iframe id="wpFrame" title="WP Playground"></iframe>
+</div>
+
+<script>
+function utf8_to_b64(str) {
+    return window.btoa(unescape(encodeURIComponent(str)));
+}
+
+function launch() {
+    const php = document.getElementById('phpVer').value;
+    const statusDiv = document.getElementById('status');
+    const iframe = document.getElementById('wpFrame');
+
+    statusDiv.innerHTML = '<div class="loader"></div><p>正在建置環境...<br>下載語言包與設定時區中</p>';
+    iframe.style.display = 'none';
+
+    // 關鍵修正：加入 require_once 'wp-load.php'; 
+    // 這樣才能使用 update_option 等 WordPress 函式
+    const phpCode = `<?php
+        require_once 'wp-load.php';
+        update_option( 'timezone_string', 'Asia/Taipei' );
+        update_option( 'gmt_offset', 8 );
+    ?>`;
+
+    const blueprint = {
+        "landingPage": "/wp-admin/options-general.php", 
+        "preferredVersions": {
+            "php": php,
+            "wp": "latest"
+        },
+        "features": {
+            "networking": true
+        },
+        "steps": [
+            {
+                "step": "login",
+                "username": "admin",
+                "password": "password"
+            },
+            {
+                "step": "setSiteLanguage",
+                "language": "zh_TW"
+            },
+            {
+                "step": "runPHP",
+                "code": phpCode
+            }
+        ]
+    };
+
+    const jsonStr = JSON.stringify(blueprint);
+    const base64Blueprint = utf8_to_b64(jsonStr);
+    const url = 'https://playground.wordpress.net/#' + base64Blueprint;
+
+    console.log("Launching URL:", url);
+
+    iframe.src = url;
+    
+    iframe.onload = function() {
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+            iframe.style.display = 'block';
+        }, 1500);
+    };
+}
+</script>
+
+</body>
+</html>
