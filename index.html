@@ -564,6 +564,11 @@
                     <label>Branch / Tag (選填)</label>
                     <input type="text" id="githubRef" placeholder="預設: HEAD (main/master)">
                 </div>
+                <div class="control-group">
+                    <label>外掛目錄名稱 (選填)</label>
+                    <input type="text" id="pluginDirName" placeholder="自動從 repo 名稱推斷">
+                    <div class="hint">⚠️ 外掛須符合 WP 標準：根目錄需有包含標頭註釋的主 PHP 檔</div>
+                </div>
             </div>
 
             <div id="plugin-proxy" class="plugin-input-group">
@@ -591,6 +596,15 @@
                 <label>自訂路徑</label>
                 <input type="text" id="customLanding" placeholder="/wp-admin/options-general.php?page=your-plugin">
             </div>
+            <div class="control-group">
+                <label class="checkbox-group">
+                    <input type="checkbox" id="autoLogin" checked>
+                    <span>自動登入管理員帳號</span>
+                </label>
+                <div class="hint" id="loginHint" style="display:none; color: var(--warning);">
+                    💡 前台首頁無需登入，但登入可讓您在前台工具列快速切換
+                </div>
+            </div>
         </div>
 
         <div class="section">
@@ -614,8 +628,11 @@
     </div>
 
     <div class="sidebar-footer">
-        <button class="btn btn-primary" onclick="launchPlayground()">
+        <button id="btnLaunch" class="btn btn-primary" onclick="launchPlayground()">
             🚀 啟動 Playground
+        </button>
+        <button id="btnRestart" class="btn btn-primary" style="display:none; background: var(--warning);" onclick="restartPlayground()">
+            🔄 重新啟動
         </button>
         <button class="btn btn-secondary" onclick="showBlueprintTab()">
             📋 查看 Blueprint JSON
@@ -696,6 +713,7 @@ function generateBlueprint() {
     const enableNetworking = document.getElementById('enableNetworking').checked;
     const language = document.getElementById('siteLanguage').value;
     const setTimezone = document.getElementById('setTimezone').checked;
+    const autoLogin = document.getElementById('autoLogin').checked;
 
     let landingPage = document.getElementById('landingPage').value;
     if (landingPage === 'custom') {
@@ -717,10 +735,13 @@ function generateBlueprint() {
         features: {
             networking: enableNetworking
         },
-        steps: [
-            { step: 'login', username: 'admin', password: 'password' }
-        ]
+        steps: []
     };
+
+    // 條件性加入登入步驟
+    if (autoLogin) {
+        blueprint.steps.push({ step: 'login', username: 'admin', password: 'password' });
+    }
 
     if (language && language !== 'en_US') {
         blueprint.steps.push({ step: 'setSiteLanguage', language: language });
@@ -772,13 +793,18 @@ update_option('gmt_offset', 8);
             ? githubRepo 
             : `https://github.com/${githubRepo}`;
         
+        const pluginDirName = document.getElementById('pluginDirName').value.trim();
+        const repoName = githubRepo.split('/').pop().replace('.git', '');
+        const targetDir = pluginDirName || repoName;
+        
         blueprint.steps.push({
             step: 'installPlugin',
             pluginData: {
                 resource: 'git:directory',
                 url: repoUrl,
                 ref: githubRef,
-                refType: githubRef === 'HEAD' ? 'refname' : 'refname'
+                refType: githubRef === 'HEAD' ? 'refname' : 'refname',
+                path: `/wordpress/wp-content/plugins/${targetDir}`
             }
         });
     } else if (pluginSource === 'proxy' && proxyUrl) {
@@ -829,6 +855,8 @@ function launchPlayground() {
 
     const placeholder = document.getElementById('previewPlaceholder');
     const iframe = document.getElementById('wpFrame');
+    const btnLaunch = document.getElementById('btnLaunch');
+    const btnRestart = document.getElementById('btnRestart');
     
     placeholder.innerHTML = `
         <div class="loader"></div>
@@ -846,10 +874,35 @@ function launchPlayground() {
         setTimeout(() => {
             placeholder.classList.add('hidden');
             iframe.style.display = 'block';
+            btnLaunch.style.display = 'none';
+            btnRestart.style.display = 'block';
         }, 2000);
     };
 
     document.querySelector('[data-tab="preview"]').click();
+}
+
+function restartPlayground() {
+    const iframe = document.getElementById('wpFrame');
+    const btnLaunch = document.getElementById('btnLaunch');
+    const btnRestart = document.getElementById('btnRestart');
+    
+    iframe.src = '';
+    iframe.style.display = 'none';
+    
+    document.getElementById('previewPlaceholder').innerHTML = `
+        <div class="preview-icon">🎮</div>
+        <div>
+            <h3 style="margin-bottom: 8px;">準備就緒</h3>
+            <p>設定完成後，點擊「啟動 Playground」開始</p>
+        </div>
+    `;
+    document.getElementById('previewPlaceholder').classList.remove('hidden');
+    
+    btnRestart.style.display = 'none';
+    btnLaunch.style.display = 'block';
+    
+    setTimeout(launchPlayground, 100);
 }
 
 function showBlueprintTab() {
@@ -958,6 +1011,9 @@ document.querySelectorAll('.plugin-source-tab').forEach(tab => {
 document.getElementById('landingPage').addEventListener('change', (e) => {
     document.getElementById('customLandingGroup').style.display = 
         e.target.value === 'custom' ? 'block' : 'none';
+    // 當選擇前台首頁時顯示登入提示
+    document.getElementById('loginHint').style.display = 
+        e.target.value === '/' ? 'block' : 'none';
     updateBlueprintPreview();
 });
 
