@@ -3,133 +3,988 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WP Playground TW</title>
+    <title>WP Playground TW - Blueprint 產生器</title>
+    <meta name="description" content="繁體中文 WordPress Playground 測試環境與 Blueprint 產生器。支援 GitHub Proxy、git:directory 等多種外掛安裝方式。">
+    <meta name="keywords" content="WordPress, Playground, Blueprint, 繁體中文, 台灣, GitHub, 外掛測試">
+    <meta property="og:title" content="WP Playground TW - Blueprint 產生器">
+    <meta property="og:description" content="繁體中文 WordPress Playground 測試環境與 Blueprint 產生器">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="zh_TW">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2271b1; --bg: #f0f0f1; --sidebar-w: 300px; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-        body { display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
-        .sidebar { width: var(--sidebar-w); background: #fff; padding: 20px; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 2; }
-        .brand { font-size: 1.2rem; font-weight: bold; color: #1d2327; margin-bottom: 10px; }
-        .brand span { color: var(--primary); }
-        .control-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; color: #50575e; }
-        .control-group select, .control-group input { width: 100%; padding: 8px; border: 1px solid #8c8f94; border-radius: 4px; }
-        .control-group input:read-only { background: #f0f0f1; color: #646970; }
-        .btn-start { margin-top: auto; background: var(--primary); color: #fff; border: none; padding: 12px; border-radius: 4px; font-size: 1rem; cursor: pointer; transition: 0.2s; }
-        .btn-start:hover { background: #135e96; }
-        .preview { flex: 1; position: relative; background: #dcdcde; display: flex; align-items: center; justify-content: center; }
-        iframe { width: 100%; height: 100%; border: none; display: none; }
-        .status-msg { text-align: center; color: #646970; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @media (max-width: 768px) { body { flex-direction: column; overflow: auto; } .sidebar { width: 100%; height: auto; flex-shrink: 0; } .preview { height: 600px; } }
+        :root {
+            --primary: #0073aa;
+            --primary-dark: #005177;
+            --accent: #00a0d2;
+            --success: #46b450;
+            --warning: #ffb900;
+            --danger: #dc3232;
+            --bg-dark: #1d2327;
+            --bg-medium: #2c3338;
+            --bg-light: #3c434a;
+            --text-primary: #f0f0f1;
+            --text-secondary: #a7aaad;
+            --border-color: #4f5458;
+            --code-bg: #23282d;
+            --sidebar-w: 380px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            height: 100vh;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-w);
+            background: linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .brand {
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .brand span { color: var(--accent); }
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .control-group select,
+        .control-group input[type="text"],
+        .control-group input[type="url"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 160, 210, 0.15);
+        }
+        .control-group input::placeholder {
+            color: var(--text-secondary);
+        }
+        .control-group .hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .checkbox-group:hover { border-color: var(--accent); }
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+        .checkbox-group span { font-size: 0.85rem; }
+        
+        .debug-toggle.active {
+            border-color: var(--warning);
+            background: rgba(255, 185, 0, 0.1);
+        }
+        .debug-options {
+            margin-top: 8px;
+            padding: 12px;
+            background: rgba(255, 185, 0, 0.05);
+            border: 1px solid rgba(255, 185, 0, 0.2);
+            border-radius: 6px;
+            animation: slideDown 0.2s ease-out;
+        }
+        .debug-options .control-group { margin-bottom: 8px; }
+        .debug-options .control-group:last-child { margin-bottom: 0; }
+        .debug-options .checkbox-group {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .debug-banner {
+            display: none;
+            padding: 8px 12px;
+            background: linear-gradient(90deg, rgba(255, 185, 0, 0.15), transparent);
+            border-left: 3px solid var(--warning);
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+            color: var(--warning);
+            align-items: center;
+            gap: 8px;
+        }
+        .debug-banner.visible { display: flex; }
+        .debug-banner-icon { font-size: 1.1rem; }
+
+        .plugin-source-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            background: var(--bg-dark);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .plugin-source-tab {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .plugin-source-tab.active {
+            background: var(--primary);
+            color: var(--text-primary);
+        }
+        .plugin-source-tab:hover:not(.active) {
+            color: var(--text-primary);
+            background: var(--bg-light);
+        }
+
+        .plugin-input-group { display: none; }
+        .plugin-input-group.active { display: block; }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border-color);
+        }
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 115, 170, 0.4);
+        }
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-primary);
+            margin-top: 10px;
+        }
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tabs-bar {
+            display: flex;
+            background: var(--bg-medium);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tab-btn {
+            padding: 14px 24px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: rgba(0, 160, 210, 0.05);
+        }
+        .tab-btn:hover:not(.active) {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tab-content {
+            flex: 1;
+            display: none;
+            position: relative;
+        }
+        .tab-content.active { display: flex; flex-direction: column; }
+
+        .preview-container {
+            flex: 1;
+            position: relative;
+            background: var(--bg-dark);
+        }
+        .preview-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .preview-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            gap: 16px;
+        }
+        .preview-placeholder.hidden { display: none; }
+        .preview-icon {
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+
+        .blueprint-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--code-bg);
+        }
+        .blueprint-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--bg-medium);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .blueprint-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .blueprint-toolbar-right {
+            display: flex;
+            gap: 8px;
+        }
+        .toolbar-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toolbar-btn:hover {
+            background: var(--bg-light);
+            border-color: var(--accent);
+        }
+        .toolbar-btn.copied {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        .blueprint-code {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+        .blueprint-code pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--bg-light);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-badge.info { background: rgba(0, 160, 210, 0.15); color: var(--accent); }
+        .status-badge.success { background: rgba(70, 180, 80, 0.15); color: var(--success); }
+        .status-badge.warning { background: rgba(255, 185, 0, 0.15); color: var(--warning); }
+
+        .url-display {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+        .url-display-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .url-display-content {
+            display: flex;
+            gap: 8px;
+        }
+        .url-display-content input {
+            flex: 1;
+            padding: 8px 10px;
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+        .url-display-content button {
+            padding: 8px 12px;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .url-display-content button:hover {
+            background: var(--border-color);
+        }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; max-height: 50vh; }
+            .main-area { height: 50vh; }
+        }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="brand">WP <span>Playground</span> TW</div>
-
-    <div class="control-group">
-        <label>PHP 版本</label>
-        <select id="phpVer">
-            <option value="7.4">7.4</option>
-            <option value="8.0">8.0</option>
-            <option value="8.1" selected>8.1 (推薦)</option>
-            <option value="8.2">8.2</option>
-            <option value="8.3">8.3</option>
-        </select>
+    <div class="sidebar-header">
+        <div class="brand">
+            <div class="brand-icon">⚡</div>
+            <div>
+                <div>WP <span>Playground</span> TW</div>
+                <div class="brand-sub">Blueprint 產生器 & 測試環境</div>
+            </div>
+        </div>
     </div>
 
-    <div class="control-group">
-        <label>預設時區</label>
-        <input type="text" value="Asia/Taipei (UTC+8)" readonly>
+    <div class="sidebar-content">
+        <div class="section">
+            <div class="section-title">⚙️ 環境設定</div>
+            <div class="control-group">
+                <label>PHP 版本</label>
+                <select id="phpVersion">
+                    <option value="7.4">PHP 7.4</option>
+                    <option value="8.0">PHP 8.0</option>
+                    <option value="8.1" selected>PHP 8.1 (推薦)</option>
+                    <option value="8.2">PHP 8.2</option>
+                    <option value="8.3">PHP 8.3</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>WordPress 版本</label>
+                <select id="wpVersion">
+                    <option value="latest" selected>最新版本 (Latest)</option>
+                    <option value="6.7">6.7</option>
+                    <option value="6.6">6.6</option>
+                    <option value="6.5">6.5</option>
+                    <option value="6.4">6.4</option>
+                    <option value="nightly">Nightly (開發版)</option>
+                    <option value="beta">Beta 測試版</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label class="checkbox-group debug-toggle">
+                    <input type="checkbox" id="enableDebug">
+                    <span>🐛 啟用 WP_DEBUG 除錯模式</span>
+                </label>
+            </div>
+            <div id="debugOptions" class="debug-options" style="display:none;">
+                <div class="control-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="enableDebugLog" checked>
+                        <span>WP_DEBUG_LOG (記錄到檔案)</span>
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="enableDebugDisplay" checked>
+                        <span>WP_DEBUG_DISPLAY (頁面顯示)</span>
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="enableScriptDebug">
+                        <span>SCRIPT_DEBUG (未壓縮 JS/CSS)</span>
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="enableSaveQueries">
+                        <span>SAVEQUERIES (SQL 查詢記錄)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="checkbox-group">
+                    <input type="checkbox" id="enableNetworking" checked>
+                    <span>啟用網路功能 (API 呼叫)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🔌 外掛安裝</div>
+            <div class="plugin-source-tabs">
+                <button class="plugin-source-tab active" data-source="wporg">WordPress.org</button>
+                <button class="plugin-source-tab" data-source="github">GitHub</button>
+                <button class="plugin-source-tab" data-source="proxy">GitHub Proxy</button>
+            </div>
+
+            <div id="plugin-wporg" class="plugin-input-group active">
+                <div class="control-group">
+                    <label>外掛 Slug</label>
+                    <input type="text" id="pluginSlug" placeholder="例如: gutenberg, woocommerce">
+                    <div class="hint">輸入 WordPress.org 官方外掛的 slug 名稱</div>
+                </div>
+            </div>
+
+            <div id="plugin-github" class="plugin-input-group">
+                <div class="control-group">
+                    <label>GitHub Repository</label>
+                    <input type="text" id="githubRepo" placeholder="例如: baiyuan/tw-weather-alerts">
+                    <div class="hint">使用 git:directory 資源（官方推薦）</div>
+                </div>
+                <div class="control-group">
+                    <label>Branch / Tag (選填)</label>
+                    <input type="text" id="githubRef" placeholder="預設: HEAD (main/master)">
+                </div>
+            </div>
+
+            <div id="plugin-proxy" class="plugin-input-group">
+                <div class="control-group">
+                    <label>GitHub Proxy URL</label>
+                    <input type="url" id="proxyUrl" placeholder="https://github-proxy.com/proxy/?repo=user/repo">
+                    <div class="hint">⚠️ GitHub Proxy 即將停用，建議使用 GitHub 選項</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📍 導航設定</div>
+            <div class="control-group">
+                <label>Landing Page</label>
+                <select id="landingPage">
+                    <option value="/wp-admin/">WordPress 後台首頁</option>
+                    <option value="/wp-admin/plugins.php">外掛管理頁面</option>
+                    <option value="/wp-admin/options-general.php">一般設定</option>
+                    <option value="/">前台首頁</option>
+                    <option value="custom">自訂路徑...</option>
+                </select>
+            </div>
+            <div class="control-group" id="customLandingGroup" style="display:none;">
+                <label>自訂路徑</label>
+                <input type="text" id="customLanding" placeholder="/wp-admin/options-general.php?page=your-plugin">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🌐 語系與時區</div>
+            <div class="control-group">
+                <label>預設語系</label>
+                <select id="siteLanguage">
+                    <option value="zh_TW" selected>繁體中文 (zh_TW)</option>
+                    <option value="zh_CN">簡體中文 (zh_CN)</option>
+                    <option value="en_US">English (en_US)</option>
+                    <option value="ja">日本語 (ja)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label class="checkbox-group">
+                    <input type="checkbox" id="setTimezone" checked>
+                    <span>設定時區為 Asia/Taipei (UTC+8)</span>
+                </label>
+            </div>
+        </div>
     </div>
 
-    <div class="control-group">
-        <label>預設語系</label>
-        <input type="text" value="繁體中文 (zh_TW)" readonly>
+    <div class="sidebar-footer">
+        <button class="btn btn-primary" onclick="launchPlayground()">
+            🚀 啟動 Playground
+        </button>
+        <button class="btn btn-secondary" onclick="showBlueprintTab()">
+            📋 查看 Blueprint JSON
+        </button>
     </div>
-
-    <div class="control-group">
-        <label style="color: #d63638;">⚠️ 啟動須知</label>
-        <p style="font-size: 0.8rem; color: #646970; line-height: 1.4;">
-            系統將自動下載語言包並校正時區，請等待畫面載入完成（約 10-15 秒）。
-        </p>
-    </div>
-
-    <button class="btn-start" onclick="launch()">🚀 啟動環境</button>
 </div>
 
-<div class="preview">
-    <div id="status" class="status-msg">
-        <h2>準備就緒</h2>
-        <p>點擊左側按鈕開始構建環境</p>
+<div class="main-area">
+    <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="preview">預覽環境</button>
+        <button class="tab-btn" data-tab="blueprint">Blueprint JSON</button>
     </div>
-    <iframe id="wpFrame" title="WP Playground"></iframe>
+
+    <div id="tab-preview" class="tab-content active">
+        <div class="preview-container">
+            <div id="debugBanner" class="debug-banner">
+                <span class="debug-banner-icon">🐛</span>
+                <span>除錯模式已啟用 - 錯誤訊息將顯示在頁面上</span>
+            </div>
+            <div id="previewPlaceholder" class="preview-placeholder">
+                <div class="preview-icon">🎮</div>
+                <div>
+                    <h3 style="margin-bottom: 8px;">準備就緒</h3>
+                    <p>設定完成後，點擊「啟動 Playground」開始</p>
+                </div>
+            </div>
+            <iframe id="wpFrame" title="WordPress Playground"></iframe>
+        </div>
+    </div>
+
+    <div id="tab-blueprint" class="tab-content">
+        <div class="blueprint-container">
+            <div class="blueprint-toolbar">
+                <div class="blueprint-toolbar-left">
+                    <span class="status-badge info">💡 即時預覽</span>
+                    Blueprint 會根據設定自動更新
+                </div>
+                <div class="blueprint-toolbar-right">
+                    <button class="toolbar-btn" onclick="copyBlueprint()">
+                        <span id="copyIcon">📋</span> 複製 JSON
+                    </button>
+                    <button class="toolbar-btn" onclick="copyPlaygroundUrl()">
+                        🔗 複製 URL
+                    </button>
+                </div>
+            </div>
+            <div class="blueprint-code">
+                <pre id="blueprintOutput"></pre>
+            </div>
+            <div style="padding: 0 20px 20px;">
+                <div class="url-display">
+                    <div class="url-display-label">Playground URL</div>
+                    <div class="url-display-content">
+                        <input type="text" id="playgroundUrl" readonly>
+                        <button onclick="copyPlaygroundUrl()">複製</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-function utf8_to_b64(str) {
-    return window.btoa(unescape(encodeURIComponent(str)));
+const BASE_PLAYGROUND_URL = 'https://playground.wordpress.net/';
+
+function utf8ToBase64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
 }
 
-function launch() {
-    const php = document.getElementById('phpVer').value;
-    const statusDiv = document.getElementById('status');
-    const iframe = document.getElementById('wpFrame');
+function getPluginSource() {
+    return document.querySelector('.plugin-source-tab.active').dataset.source;
+}
 
-    statusDiv.innerHTML = '<div class="loader"></div><p>正在建置環境...<br>下載語言包與設定時區中</p>';
-    iframe.style.display = 'none';
+function generateBlueprint() {
+    const php = document.getElementById('phpVersion').value;
+    const wp = document.getElementById('wpVersion').value;
+    const enableDebug = document.getElementById('enableDebug').checked;
+    const enableNetworking = document.getElementById('enableNetworking').checked;
+    const language = document.getElementById('siteLanguage').value;
+    const setTimezone = document.getElementById('setTimezone').checked;
 
-    // 關鍵修正：加入 require_once 'wp-load.php'; 
-    // 這樣才能使用 update_option 等 WordPress 函式
-    const phpCode = `<?php
-        require_once 'wp-load.php';
-        update_option( 'timezone_string', 'Asia/Taipei' );
-        update_option( 'gmt_offset', 8 );
-    ?>`;
+    let landingPage = document.getElementById('landingPage').value;
+    if (landingPage === 'custom') {
+        landingPage = document.getElementById('customLanding').value || '/wp-admin/';
+    }
+
+    const pluginSource = getPluginSource();
+    const pluginSlug = document.getElementById('pluginSlug').value.trim();
+    const githubRepo = document.getElementById('githubRepo').value.trim();
+    const githubRef = document.getElementById('githubRef').value.trim() || 'HEAD';
+    const proxyUrl = document.getElementById('proxyUrl').value.trim();
 
     const blueprint = {
-        "landingPage": "/wp-admin/options-general.php", 
-        "preferredVersions": {
-            "php": php,
-            "wp": "latest"
+        landingPage: landingPage,
+        preferredVersions: {
+            php: php,
+            wp: wp
         },
-        "features": {
-            "networking": true
+        features: {
+            networking: enableNetworking
         },
-        "steps": [
-            {
-                "step": "login",
-                "username": "admin",
-                "password": "password"
-            },
-            {
-                "step": "setSiteLanguage",
-                "language": "zh_TW"
-            },
-            {
-                "step": "runPHP",
-                "code": phpCode
-            }
+        steps: [
+            { step: 'login', username: 'admin', password: 'password' }
         ]
     };
 
-    const jsonStr = JSON.stringify(blueprint);
-    const base64Blueprint = utf8_to_b64(jsonStr);
-    const url = 'https://playground.wordpress.net/#' + base64Blueprint;
+    if (language && language !== 'en_US') {
+        blueprint.steps.push({ step: 'setSiteLanguage', language: language });
+    }
 
-    console.log("Launching URL:", url);
+    if (setTimezone) {
+        blueprint.steps.push({
+            step: 'runPHP',
+            code: `<?php
+require_once 'wp-load.php';
+update_option('timezone_string', 'Asia/Taipei');
+update_option('gmt_offset', 8);
+?>`
+        });
+    }
+
+    if (enableDebug) {
+        const debugConsts = { WP_DEBUG: true };
+        
+        if (document.getElementById('enableDebugLog').checked) {
+            debugConsts.WP_DEBUG_LOG = true;
+        }
+        if (document.getElementById('enableDebugDisplay').checked) {
+            debugConsts.WP_DEBUG_DISPLAY = true;
+        }
+        if (document.getElementById('enableScriptDebug').checked) {
+            debugConsts.SCRIPT_DEBUG = true;
+        }
+        if (document.getElementById('enableSaveQueries').checked) {
+            debugConsts.SAVEQUERIES = true;
+        }
+        
+        blueprint.steps.push({
+            step: 'defineWpConfigConsts',
+            consts: debugConsts
+        });
+    }
+
+    if (pluginSource === 'wporg' && pluginSlug) {
+        blueprint.steps.push({
+            step: 'installPlugin',
+            pluginData: {
+                resource: 'wordpress.org/plugins',
+                slug: pluginSlug
+            }
+        });
+    } else if (pluginSource === 'github' && githubRepo) {
+        const repoUrl = githubRepo.startsWith('https://') 
+            ? githubRepo 
+            : `https://github.com/${githubRepo}`;
+        
+        blueprint.steps.push({
+            step: 'installPlugin',
+            pluginData: {
+                resource: 'git:directory',
+                url: repoUrl,
+                ref: githubRef,
+                refType: githubRef === 'HEAD' ? 'refname' : 'refname'
+            }
+        });
+    } else if (pluginSource === 'proxy' && proxyUrl) {
+        const repoName = extractRepoName(proxyUrl);
+        blueprint.steps.push({
+            step: 'installPlugin',
+            pluginData: {
+                resource: 'url',
+                url: proxyUrl
+            }
+        });
+        if (repoName) {
+            blueprint.steps.push({
+                step: 'mv',
+                fromPath: `/wordpress/wp-content/plugins/${repoName}-main`,
+                toPath: `/wordpress/wp-content/plugins/${repoName}`
+            });
+            blueprint.steps.push({
+                step: 'activatePlugin',
+                pluginPath: repoName
+            });
+        }
+    }
+
+    return blueprint;
+}
+
+function extractRepoName(proxyUrl) {
+    const match = proxyUrl.match(/repo=([^&/]+\/)?([^&/]+)/);
+    return match ? match[2] : null;
+}
+
+function updateBlueprintPreview() {
+    const blueprint = generateBlueprint();
+    const jsonStr = JSON.stringify(blueprint, null, 2);
+    document.getElementById('blueprintOutput').textContent = jsonStr;
+    
+    const base64 = utf8ToBase64(JSON.stringify(blueprint));
+    const url = `${BASE_PLAYGROUND_URL}#${base64}`;
+    document.getElementById('playgroundUrl').value = url;
+}
+
+function launchPlayground() {
+    const blueprint = generateBlueprint();
+    const jsonStr = JSON.stringify(blueprint);
+    const base64 = utf8ToBase64(jsonStr);
+    const url = `${BASE_PLAYGROUND_URL}#${base64}`;
+
+    const placeholder = document.getElementById('previewPlaceholder');
+    const iframe = document.getElementById('wpFrame');
+    
+    placeholder.innerHTML = `
+        <div class="loader"></div>
+        <div>
+            <h3 style="margin-bottom: 8px;">正在建置環境...</h3>
+            <p>下載 WordPress 與設定環境中，請稍候</p>
+        </div>
+    `;
+    placeholder.classList.remove('hidden');
+    iframe.style.display = 'none';
 
     iframe.src = url;
     
-    iframe.onload = function() {
+    iframe.onload = () => {
         setTimeout(() => {
-            statusDiv.style.display = 'none';
+            placeholder.classList.add('hidden');
             iframe.style.display = 'block';
-        }, 1500);
+        }, 2000);
     };
+
+    document.querySelector('[data-tab="preview"]').click();
 }
+
+function showBlueprintTab() {
+    document.querySelector('[data-tab="blueprint"]').click();
+}
+
+function copyBlueprint() {
+    const blueprint = generateBlueprint();
+    const jsonStr = JSON.stringify(blueprint, null, 2);
+    navigator.clipboard.writeText(jsonStr).then(() => {
+        const btn = document.querySelector('.toolbar-btn');
+        const icon = document.getElementById('copyIcon');
+        btn.classList.add('copied');
+        icon.textContent = '✅';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            icon.textContent = '📋';
+        }, 2000);
+    });
+}
+
+function copyPlaygroundUrl() {
+    const url = document.getElementById('playgroundUrl').value;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('URL 已複製到剪貼簿！');
+    });
+}
+
+function parseUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (params.has('plugin')) {
+        const plugin = params.get('plugin');
+        if (plugin.includes('github-proxy.com')) {
+            document.querySelector('[data-source="proxy"]').click();
+            document.getElementById('proxyUrl').value = plugin;
+        } else if (plugin.includes('github.com')) {
+            document.querySelector('[data-source="github"]').click();
+            const match = plugin.match(/github\.com\/([^/]+\/[^/]+)/);
+            if (match) document.getElementById('githubRepo').value = match[1];
+        } else {
+            document.getElementById('pluginSlug').value = plugin;
+        }
+    }
+
+    if (params.has('github')) {
+        document.querySelector('[data-source="github"]').click();
+        document.getElementById('githubRepo').value = params.get('github');
+    }
+
+    if (params.has('php')) {
+        document.getElementById('phpVersion').value = params.get('php');
+    }
+
+    if (params.has('wp')) {
+        document.getElementById('wpVersion').value = params.get('wp');
+    }
+
+    if (params.has('landing')) {
+        const landing = params.get('landing');
+        const select = document.getElementById('landingPage');
+        const exists = Array.from(select.options).some(opt => opt.value === landing);
+        if (exists) {
+            select.value = landing;
+        } else {
+            select.value = 'custom';
+            document.getElementById('customLandingGroup').style.display = 'block';
+            document.getElementById('customLanding').value = landing;
+        }
+    }
+
+    if (params.has('debug') && params.get('debug') === 'true') {
+        document.getElementById('enableDebug').checked = true;
+        document.getElementById('debugOptions').style.display = 'block';
+        document.querySelector('.debug-toggle').classList.add('active');
+        document.getElementById('debugBanner').classList.add('visible');
+    }
+
+    if (params.has('autostart') && params.get('autostart') === 'true') {
+        setTimeout(launchPlayground, 500);
+    }
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+        if (btn.dataset.tab === 'blueprint') {
+            updateBlueprintPreview();
+        }
+    });
+});
+
+document.querySelectorAll('.plugin-source-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.plugin-source-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.plugin-input-group').forEach(g => g.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`plugin-${tab.dataset.source}`).classList.add('active');
+        updateBlueprintPreview();
+    });
+});
+
+document.getElementById('landingPage').addEventListener('change', (e) => {
+    document.getElementById('customLandingGroup').style.display = 
+        e.target.value === 'custom' ? 'block' : 'none';
+    updateBlueprintPreview();
+});
+
+document.getElementById('enableDebug').addEventListener('change', (e) => {
+    const debugOptions = document.getElementById('debugOptions');
+    const debugToggle = document.querySelector('.debug-toggle');
+    const debugBanner = document.getElementById('debugBanner');
+    
+    if (e.target.checked) {
+        debugOptions.style.display = 'block';
+        debugToggle.classList.add('active');
+        debugBanner.classList.add('visible');
+    } else {
+        debugOptions.style.display = 'none';
+        debugToggle.classList.remove('active');
+        debugBanner.classList.remove('visible');
+    }
+    updateBlueprintPreview();
+});
+
+document.querySelectorAll('select, input').forEach(el => {
+    el.addEventListener('change', updateBlueprintPreview);
+    el.addEventListener('input', updateBlueprintPreview);
+});
+
+parseUrlParams();
+updateBlueprintPreview();
 </script>
 
 </body>

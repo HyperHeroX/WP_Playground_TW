@@ -1,0 +1,43 @@
+{
+  "landingPage": "/wp-admin/options-general.php?page=tw-weather-alerts",
+  "preferredVersions": {
+    "php": "8.0",
+    "wp": "6.4"
+  },
+  "features": {
+    "networking": true
+  },
+  "steps": [
+    {
+      "step": "login",
+      "username": "admin",
+      "password": "password"
+    },
+    {
+      "step": "setSiteLanguage",
+      "language": "zh_TW"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php\nrequire_once 'wp-load.php';\nupdate_option('timezone_string', 'Asia/Taipei');\nupdate_option('gmt_offset', 8);\n?>"
+    },
+    {
+      "step": "defineWpConfigConsts",
+      "consts": {
+        "WP_DEBUG": true,
+        "WP_DEBUG_LOG": true,
+        "WP_DEBUG_DISPLAY": true
+      }
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "git:directory",
+        "url": "https://github.com/baiyuan/tw-weather-alerts",
+        "ref": "HEAD",
+        "refType": "refname"
+      }
+    }
+  ]
+}
+

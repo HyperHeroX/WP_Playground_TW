@@ -1,0 +1,13 @@
+# Playwright MCP screenshots
+.playwright-mcp/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (if any)
+node_modules/
+
