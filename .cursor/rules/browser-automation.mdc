@@ -1,0 +1,42 @@
+---
+description: Browser automation tools configuration
+globs:
+alwaysApply: true
+---
+
+# Browser Automation Tools Configuration
+
+## Auto-Approve Browser Actions
+
+When using Browser Automation Tools (browser_click, browser_type, browser_select_option, browser_hover, etc.), actions should be executed **without requiring user confirmation** to enable efficient testing workflows.
+
+### Allowed Actions (No Confirmation Required)
+
+- `browser_navigate` - Navigate to URLs
+- `browser_click` - Click elements
+- `browser_type` - Type text into inputs
+- `browser_select_option` - Select dropdown options
+- `browser_hover` - Hover over elements
+- `browser_press_key` - Press keyboard keys
+- `browser_wait_for` - Wait for conditions
+- `browser_snapshot` - Capture page state
+- `browser_take_screenshot` - Take screenshots
+- `browser_fill_form` - Fill multiple form fields
+- `browser_evaluate` - Execute JavaScript
+- `browser_navigate_back` - Navigate back
+- `browser_resize` - Resize browser window
+- `browser_tabs` - Manage browser tabs
+
+### Testing Workflow
+
+1. Navigate to target page
+2. Take snapshot to get element references
+3. Execute interactions without confirmation delays
+4. Verify results via snapshots or screenshots
+5. Continue to next test case automatically
+
+### Security Notes
+
+- Browser automation is intended for **testing local development servers** and trusted domains only
+- Do not use for automated actions on untrusted or production sites
+- All browser sessions should be sandboxed/isolated
