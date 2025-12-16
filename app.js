@@ -4,6 +4,11 @@
  */
 
 const BASE_PLAYGROUND_URL = 'https://playground.wordpress.net/';
+const STORAGE_KEY = 'wp_playground_blueprint_v1';
+
+// State to track if the user has manually modified the blueprint
+let isManualMode = false;
+let manualBlueprint = null;
 
 /**
  * 將 UTF-8 字串轉換為 Base64
@@ -22,7 +27,19 @@ function getPluginSource() {
 /**
  * 產生 Blueprint JSON
  */
+/**
+ * 產生 Blueprint JSON
+ */
 function generateBlueprint() {
+    // If in manual mode, return the manual blueprint content if valid
+    if (isManualMode && manualBlueprint) {
+        try {
+            return typeof manualBlueprint === 'string' ? JSON.parse(manualBlueprint) : manualBlueprint;
+        } catch (e) {
+            console.error('Invalid manual blueprint JSON', e);
+        }
+    }
+
     const php = document.getElementById('phpVersion').value;
     const wp = document.getElementById('wpVersion').value;
     const enableDebug = document.getElementById('enableDebug').checked;
@@ -75,7 +92,7 @@ update_option('gmt_offset', 8);
 
     if (enableDebug) {
         const debugConsts = { WP_DEBUG: true };
-        
+
         if (document.getElementById('enableDebugLog').checked) {
             debugConsts.WP_DEBUG_LOG = true;
         }
@@ -88,7 +105,7 @@ update_option('gmt_offset', 8);
         if (document.getElementById('enableSaveQueries').checked) {
             debugConsts.SAVEQUERIES = true;
         }
-        
+
         blueprint.steps.push({
             step: 'defineWpConfigConsts',
             consts: debugConsts
@@ -104,14 +121,18 @@ update_option('gmt_offset', 8);
             }
         });
     } else if (pluginSource === 'github' && githubRepo) {
-        const repoUrl = githubRepo.startsWith('https://') 
-            ? githubRepo 
+        const repoUrl = githubRepo.startsWith('https://')
+            ? githubRepo
             : `https://github.com/${githubRepo}`;
-        
-        const pluginDirName = document.getElementById('pluginDirName').value.trim();
-        const repoName = githubRepo.split('/').pop().replace('.git', '');
-        const targetDir = pluginDirName || repoName;
-        
+
+        // For git:directory, path is the relative path INSIDE the repo
+        // If the user provided a directory name, we assume they might mean a subdir in the repo?
+        // Or if the previous logic was trying to set the destination, that was wrong.
+        // For now, let's default to '.' (root of repo) as that matches the working blueprint.
+        // If we want to support subdirectories in monorepos, we could use pluginDirName for that,
+        // but the label '外掛目錄名稱' suggests destination. 
+        // Let's assume '.' for now to fix the reported issue.
+
         blueprint.steps.push({
             step: 'installPlugin',
             pluginData: {
@@ -119,7 +140,7 @@ update_option('gmt_offset', 8);
                 url: repoUrl,
                 ref: githubRef,
                 refType: githubRef === 'HEAD' ? 'refname' : 'refname',
-                path: `/wordpress/wp-content/plugins/${targetDir}`
+                path: '.'
             }
         });
     } else if (pluginSource === 'proxy' && proxyUrl) {
@@ -159,13 +180,53 @@ function extractRepoName(proxyUrl) {
  * 更新 Blueprint 預覽
  */
 function updateBlueprintPreview() {
-    const blueprint = generateBlueprint();
-    const jsonStr = JSON.stringify(blueprint, null, 2);
-    document.getElementById('blueprintOutput').textContent = jsonStr;
-    
-    const base64 = utf8ToBase64(JSON.stringify(blueprint));
-    const url = `${BASE_PLAYGROUND_URL}#${base64}`;
-    document.getElementById('playgroundUrl').value = url;
+    let blueprint;
+    let jsonStr;
+
+    if (isManualMode && manualBlueprint) {
+        // In manual mode, show the manual content
+        // Verify if it's valid JSON
+        try {
+            blueprint = typeof manualBlueprint === 'string' ? JSON.parse(manualBlueprint) : manualBlueprint;
+            jsonStr = typeof manualBlueprint === 'string' ? manualBlueprint : JSON.stringify(blueprint, null, 2);
+        } catch (e) {
+            // Invalid JSON, just use the string but don't update URL/iframe yet or handle error
+            jsonStr = manualBlueprint;
+            blueprint = null; // Mark as invalid for URL generation
+        }
+    } else {
+        // Auto generation mode
+        blueprint = generateBlueprint();
+        jsonStr = JSON.stringify(blueprint, null, 2);
+    }
+
+    // Only update textarea if it's not the focused element (to avoid cursor jumping)
+    // or if we are not in manual mode (syncing from form)
+    const editor = document.getElementById('blueprintEditor');
+    if (document.activeElement !== editor) {
+        editor.value = jsonStr;
+    }
+
+    // Update toolbar state
+    const btnReset = document.getElementById('btnResetBlueprint');
+    if (isManualMode) {
+        btnReset.style.display = 'inline-flex';
+        document.querySelector('.status-badge').textContent = '✏️ 手動編輯';
+        document.querySelector('.status-badge').className = 'status-badge warning';
+    } else {
+        btnReset.style.display = 'none';
+        document.querySelector('.status-badge').textContent = '💡 即時預覽';
+        document.querySelector('.status-badge').className = 'status-badge info';
+    }
+
+    if (blueprint) {
+        const base64 = utf8ToBase64(JSON.stringify(blueprint));
+        const url = `${BASE_PLAYGROUND_URL}#${base64}`;
+        document.getElementById('playgroundUrl').value = url;
+
+        // Save state to localStorage
+        saveState();
+    }
 }
 
 /**
@@ -181,7 +242,7 @@ function launchPlayground() {
     const iframe = document.getElementById('wpFrame');
     const btnLaunch = document.getElementById('btnLaunch');
     const btnRestart = document.getElementById('btnRestart');
-    
+
     placeholder.innerHTML = `
         <div class="loader"></div>
         <div>
@@ -193,7 +254,7 @@ function launchPlayground() {
     iframe.style.display = 'none';
 
     iframe.src = url;
-    
+
     iframe.onload = () => {
         setTimeout(() => {
             placeholder.classList.add('hidden');
@@ -213,10 +274,10 @@ function restartPlayground() {
     const iframe = document.getElementById('wpFrame');
     const btnLaunch = document.getElementById('btnLaunch');
     const btnRestart = document.getElementById('btnRestart');
-    
+
     iframe.src = '';
     iframe.style.display = 'none';
-    
+
     document.getElementById('previewPlaceholder').innerHTML = `
         <div class="preview-icon">🎮</div>
         <div>
@@ -225,10 +286,10 @@ function restartPlayground() {
         </div>
     `;
     document.getElementById('previewPlaceholder').classList.remove('hidden');
-    
+
     btnRestart.style.display = 'none';
     btnLaunch.style.display = 'block';
-    
+
     setTimeout(launchPlayground, 100);
 }
 
@@ -253,7 +314,7 @@ async function copyToClipboard(text) {
             console.warn('Clipboard API 失敗，嘗試降級方案:', err);
         }
     }
-    
+
     // 降級方案：使用 execCommand
     try {
         const textArea = document.createElement('textarea');
@@ -264,10 +325,10 @@ async function copyToClipboard(text) {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        
+
         const success = document.execCommand('copy');
         document.body.removeChild(textArea);
-        
+
         if (!success) {
             throw new Error('execCommand copy 失敗');
         }
@@ -299,11 +360,11 @@ function showCopyFeedback(btn, icon, originalIcon) {
 async function copyBlueprint() {
     const blueprint = generateBlueprint();
     const jsonStr = JSON.stringify(blueprint, null, 2);
-    
+
     const success = await copyToClipboard(jsonStr);
     const btn = document.querySelector('.toolbar-btn');
     const icon = document.getElementById('copyIcon');
-    
+
     if (success) {
         showCopyFeedback(btn, icon, '📋');
     } else {
@@ -317,7 +378,7 @@ async function copyBlueprint() {
 async function copyPlaygroundUrl() {
     const url = document.getElementById('playgroundUrl').value;
     const success = await copyToClipboard(url);
-    
+
     if (success) {
         alert('URL 已複製到剪貼簿！');
     } else {
@@ -326,11 +387,67 @@ async function copyPlaygroundUrl() {
 }
 
 /**
+ * Reset blueprint to auto-generated state
+ */
+function resetBlueprint() {
+    if (confirm('確定要重置所有手動修改並恢復為表單設定嗎？')) {
+        isManualMode = false;
+        manualBlueprint = null;
+
+        // Force update UI logic
+        const btnReset = document.getElementById('btnResetBlueprint');
+        btnReset.style.display = 'none';
+        document.querySelector('.status-badge').textContent = '💡 即時預覽';
+        document.querySelector('.status-badge').className = 'status-badge info';
+
+        updateBlueprintPreview();
+    }
+}
+
+/**
+ * Save current state to LocalStorage
+ */
+function saveState() {
+    const state = {
+        isManualMode,
+        manualBlueprint: isManualMode ? manualBlueprint : null,
+        // Optionally save form state here too if needed, but for now just blueprint
+        timestamp: new Date().getTime()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+/**
+ * Restore state from LocalStorage
+ */
+function restoreState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        try {
+            const state = JSON.parse(saved);
+            if (state.isManualMode && state.manualBlueprint) {
+                if (confirm('發現上次未儲存的 Blueprint 修改，是否還原？')) {
+                    isManualMode = true;
+                    manualBlueprint = state.manualBlueprint;
+                    // Trigger update immediately
+                    updateBlueprintPreview();
+                } else {
+                    // User chose not to restore, clear storage
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to restore state', e);
+        }
+    }
+}
+
+/**
  * 解析 URL 參數並套用設定
  */
 function parseUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    
+
     if (params.has('plugin')) {
         const plugin = params.get('plugin');
         if (plugin.includes('github-proxy.com')) {
@@ -413,9 +530,9 @@ function initEventListeners() {
 
     // Landing Page 變更
     document.getElementById('landingPage').addEventListener('change', (e) => {
-        document.getElementById('customLandingGroup').style.display = 
+        document.getElementById('customLandingGroup').style.display =
             e.target.value === 'custom' ? 'block' : 'none';
-        document.getElementById('loginHint').style.display = 
+        document.getElementById('loginHint').style.display =
             e.target.value === '/' ? 'block' : 'none';
         updateBlueprintPreview();
     });
@@ -425,7 +542,7 @@ function initEventListeners() {
         const debugOptions = document.getElementById('debugOptions');
         const debugToggle = document.querySelector('.debug-toggle');
         const debugBanner = document.getElementById('debugBanner');
-        
+
         if (e.target.checked) {
             debugOptions.style.display = 'block';
             debugToggle.classList.add('active');
@@ -443,12 +560,21 @@ function initEventListeners() {
         el.addEventListener('change', updateBlueprintPreview);
         el.addEventListener('input', updateBlueprintPreview);
     });
+
+    // Blueprint Editor Event Listener
+    const editor = document.getElementById('blueprintEditor');
+    editor.addEventListener('input', (e) => {
+        isManualMode = true;
+        manualBlueprint = e.target.value;
+        updateBlueprintPreview();
+    });
 }
 
 // 初始化應用程式
 document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     parseUrlParams();
+    restoreState(); // Check for saved state
     updateBlueprintPreview();
 });
 

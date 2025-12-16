@@ -423,13 +423,35 @@ body {
     overflow: auto;
 }
 
-.blueprint-code pre {
+.blueprint-code pre,
+.blueprint-code textarea {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
     line-height: 1.6;
     color: var(--text-primary);
     white-space: pre-wrap;
     word-break: break-all;
+}
+
+.blueprint-code textarea {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    resize: none;
+    outline: none;
+}
+
+/* Toolbar Warning Button */
+.toolbar-btn.warning {
+    color: var(--warning);
+    border-color: rgba(255, 185, 0, 0.5);
+    background: rgba(255, 185, 0, 0.05);
+}
+
+.toolbar-btn.warning:hover {
+    background: rgba(255, 185, 0, 0.1);
+    border-color: var(--warning);
 }
 
 /* Loader */

@@ -227,6 +227,9 @@
                     Blueprint 會根據設定自動更新
                 </div>
                 <div class="blueprint-toolbar-right">
+                    <button class="toolbar-btn warning" id="btnResetBlueprint" onclick="resetBlueprint()" style="display:none;">
+                        🔄 重置設定
+                    </button>
                     <button class="toolbar-btn" onclick="copyBlueprint()">
                         <span id="copyIcon">📋</span> 複製 JSON
                     </button>
@@ -236,7 +239,7 @@
                 </div>
             </div>
             <div class="blueprint-code">
-                <pre id="blueprintOutput"></pre>
+                <textarea id="blueprintEditor" spellcheck="false"></textarea>
             </div>
             <div style="padding: 0 20px 20px;">
                 <div class="url-display">
