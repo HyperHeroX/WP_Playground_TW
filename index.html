@@ -1,260 +1,269 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WP Playground TW - Blueprint 產生器</title>
-    <meta name="description" content="繁體中文 WordPress Playground 測試環境與 Blueprint 產生器。支援 GitHub Proxy、git:directory 等多種外掛安裝方式。">
+    <meta name="description"
+        content="繁體中文 WordPress Playground 測試環境與 Blueprint 產生器。支援 GitHub Proxy、git:directory 等多種外掛安裝方式。">
     <meta name="keywords" content="WordPress, Playground, Blueprint, 繁體中文, 台灣, GitHub, 外掛測試">
     <meta property="og:title" content="WP Playground TW - Blueprint 產生器">
     <meta property="og:description" content="繁體中文 WordPress Playground 測試環境與 Blueprint 產生器">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="zh_TW">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="sidebar">
-    <div class="sidebar-header">
-        <div class="brand">
-            <div class="brand-icon">⚡</div>
-            <div>
-                <div>WP <span>Playground</span> TW</div>
-                <div class="brand-sub">Blueprint 產生器 & 測試環境</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="sidebar-content">
-        <div class="section">
-            <div class="section-title">⚙️ 環境設定</div>
-            <div class="control-group">
-                <label>PHP 版本</label>
-                <select id="phpVersion">
-                    <option value="7.4">PHP 7.4</option>
-                    <option value="8.0">PHP 8.0</option>
-                    <option value="8.1" selected>PHP 8.1 (推薦)</option>
-                    <option value="8.2">PHP 8.2</option>
-                    <option value="8.3">PHP 8.3</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label>WordPress 版本</label>
-                <select id="wpVersion">
-                    <option value="latest" selected>最新版本 (Latest)</option>
-                    <option value="6.7">6.7</option>
-                    <option value="6.6">6.6</option>
-                    <option value="6.5">6.5</option>
-                    <option value="6.4">6.4</option>
-                    <option value="nightly">Nightly (開發版)</option>
-                    <option value="beta">Beta 測試版</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label class="checkbox-group debug-toggle">
-                    <input type="checkbox" id="enableDebug">
-                    <span>🐛 啟用 WP_DEBUG 除錯模式</span>
-                </label>
-            </div>
-            <div id="debugOptions" class="debug-options" style="display:none;">
-                <div class="control-group">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="enableDebugLog" checked>
-                        <span>WP_DEBUG_LOG (記錄到檔案)</span>
-                    </label>
-                </div>
-                <div class="control-group">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="enableDebugDisplay" checked>
-                        <span>WP_DEBUG_DISPLAY (頁面顯示)</span>
-                    </label>
-                </div>
-                <div class="control-group">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="enableScriptDebug">
-                        <span>SCRIPT_DEBUG (未壓縮 JS/CSS)</span>
-                    </label>
-                </div>
-                <div class="control-group">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="enableSaveQueries">
-                        <span>SAVEQUERIES (SQL 查詢記錄)</span>
-                    </label>
-                </div>
-            </div>
-            <div class="control-group">
-                <label class="checkbox-group">
-                    <input type="checkbox" id="enableNetworking" checked>
-                    <span>啟用網路功能 (API 呼叫)</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">🔌 外掛安裝</div>
-            <div class="plugin-source-tabs">
-                <button class="plugin-source-tab active" data-source="wporg">WordPress.org</button>
-                <button class="plugin-source-tab" data-source="github">GitHub</button>
-                <button class="plugin-source-tab" data-source="proxy">GitHub Proxy</button>
-            </div>
-
-            <div id="plugin-wporg" class="plugin-input-group active">
-                <div class="control-group">
-                    <label>外掛 Slug</label>
-                    <input type="text" id="pluginSlug" placeholder="例如: gutenberg, woocommerce">
-                    <div class="hint">輸入 WordPress.org 官方外掛的 slug 名稱</div>
-                </div>
-            </div>
-
-            <div id="plugin-github" class="plugin-input-group">
-                <div class="control-group">
-                    <label>GitHub Repository</label>
-                    <input type="text" id="githubRepo" placeholder="例如: baiyuan/tw-weather-alerts">
-                    <div class="hint">使用 git:directory 資源（官方推薦）</div>
-                </div>
-                <div class="control-group">
-                    <label>Branch / Tag (選填)</label>
-                    <input type="text" id="githubRef" placeholder="預設: HEAD (main/master)">
-                </div>
-                <div class="control-group">
-                    <label>外掛目錄名稱 (選填)</label>
-                    <input type="text" id="pluginDirName" placeholder="自動從 repo 名稱推斷">
-                    <div class="hint">⚠️ 外掛須符合 WP 標準：根目錄需有包含標頭註釋的主 PHP 檔</div>
-                </div>
-            </div>
-
-            <div id="plugin-proxy" class="plugin-input-group">
-                <div class="control-group">
-                    <label>GitHub Proxy URL</label>
-                    <input type="url" id="proxyUrl" placeholder="https://github-proxy.com/proxy/?repo=user/repo">
-                    <div class="hint">⚠️ GitHub Proxy 即將停用，建議使用 GitHub 選項</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">📍 導航設定</div>
-            <div class="control-group">
-                <label>Landing Page</label>
-                <select id="landingPage">
-                    <option value="/wp-admin/">WordPress 後台首頁</option>
-                    <option value="/wp-admin/plugins.php">外掛管理頁面</option>
-                    <option value="/wp-admin/options-general.php">一般設定</option>
-                    <option value="/">前台首頁</option>
-                    <option value="custom">自訂路徑...</option>
-                </select>
-            </div>
-            <div class="control-group" id="customLandingGroup" style="display:none;">
-                <label>自訂路徑</label>
-                <input type="text" id="customLanding" placeholder="/wp-admin/options-general.php?page=your-plugin">
-            </div>
-            <div class="control-group">
-                <label class="checkbox-group">
-                    <input type="checkbox" id="autoLogin" checked>
-                    <span>自動登入管理員帳號</span>
-                </label>
-                <div class="hint" id="loginHint" style="display:none; color: var(--warning);">
-                    💡 前台首頁無需登入，但登入可讓您在前台工具列快速切換
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">🌐 語系與時區</div>
-            <div class="control-group">
-                <label>預設語系</label>
-                <select id="siteLanguage">
-                    <option value="zh_TW" selected>繁體中文 (zh_TW)</option>
-                    <option value="zh_CN">簡體中文 (zh_CN)</option>
-                    <option value="en_US">English (en_US)</option>
-                    <option value="ja">日本語 (ja)</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label class="checkbox-group">
-                    <input type="checkbox" id="setTimezone" checked>
-                    <span>設定時區為 Asia/Taipei (UTC+8)</span>
-                </label>
-            </div>
-        </div>
-    </div>
-
-    <div class="sidebar-footer">
-        <button id="btnLaunch" class="btn btn-primary" onclick="launchPlayground()">
-            🚀 啟動 Playground
-        </button>
-        <button id="btnRestart" class="btn btn-primary" style="display:none; background: var(--warning);" onclick="restartPlayground()">
-            🔄 重新啟動
-        </button>
-        <button class="btn btn-secondary" onclick="showBlueprintTab()">
-            📋 查看 Blueprint JSON
-        </button>
-    </div>
-</div>
-
-<div class="main-area">
-    <div class="tabs-bar">
-        <button class="tab-btn active" data-tab="preview">預覽環境</button>
-        <button class="tab-btn" data-tab="blueprint">Blueprint JSON</button>
-    </div>
-
-    <div id="tab-preview" class="tab-content active">
-        <div class="preview-container">
-            <div id="debugBanner" class="debug-banner">
-                <span class="debug-banner-icon">🐛</span>
-                <span>除錯模式已啟用 - 錯誤訊息將顯示在頁面上</span>
-            </div>
-            <div id="previewPlaceholder" class="preview-placeholder">
-                <div class="preview-icon">🎮</div>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
                 <div>
-                    <h3 style="margin-bottom: 8px;">準備就緒</h3>
-                    <p>設定完成後，點擊「啟動 Playground」開始</p>
+                    <div>WP <span>Playground</span> TW</div>
+                    <div class="brand-sub">Blueprint 產生器 & 測試環境</div>
                 </div>
             </div>
-            <iframe id="wpFrame" title="WordPress Playground"></iframe>
+        </div>
+
+        <div class="sidebar-content">
+            <div class="section">
+                <div class="section-title">⚙️ 環境設定</div>
+                <div class="control-group">
+                    <label>PHP 版本</label>
+                    <select id="phpVersion">
+                        <option value="7.4">PHP 7.4</option>
+                        <option value="8.0">PHP 8.0</option>
+                        <option value="8.1" selected>PHP 8.1 (推薦)</option>
+                        <option value="8.2">PHP 8.2</option>
+                        <option value="8.3">PHP 8.3</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>WordPress 版本</label>
+                    <select id="wpVersion">
+                        <option value="latest" selected>最新版本 (Latest)</option>
+                        <option value="6.7">6.7</option>
+                        <option value="6.6">6.6</option>
+                        <option value="6.5">6.5</option>
+                        <option value="6.4">6.4</option>
+                        <option value="nightly">Nightly (開發版)</option>
+                        <option value="beta">Beta 測試版</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-group debug-toggle">
+                        <input type="checkbox" id="enableDebug">
+                        <span>🐛 啟用 WP_DEBUG 除錯模式</span>
+                    </label>
+                </div>
+                <div id="debugOptions" class="debug-options" style="display:none;">
+                    <div class="control-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="enableDebugLog" checked>
+                            <span>WP_DEBUG_LOG (記錄到檔案)</span>
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="enableDebugDisplay" checked>
+                            <span>WP_DEBUG_DISPLAY (頁面顯示)</span>
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="enableScriptDebug">
+                            <span>SCRIPT_DEBUG (未壓縮 JS/CSS)</span>
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="enableSaveQueries">
+                            <span>SAVEQUERIES (SQL 查詢記錄)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="enableNetworking" checked>
+                        <span>啟用網路功能 (API 呼叫)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🔌 外掛安裝</div>
+                <div class="plugin-source-tabs">
+                    <button class="plugin-source-tab active" data-source="wporg">WordPress.org</button>
+                    <button class="plugin-source-tab" data-source="github">GitHub</button>
+                    <button class="plugin-source-tab" data-source="proxy">GitHub Proxy</button>
+                </div>
+
+                <div id="plugin-wporg" class="plugin-input-group active">
+                    <div class="control-group">
+                        <label>外掛 Slug</label>
+                        <input type="text" id="pluginSlug" placeholder="例如: gutenberg, woocommerce">
+                        <div class="hint">輸入 WordPress.org 官方外掛的 slug 名稱</div>
+                    </div>
+                </div>
+
+                <div id="plugin-github" class="plugin-input-group">
+                    <div class="control-group">
+                        <label>GitHub Repository</label>
+                        <input type="text" id="githubRepo" placeholder="例如: baiyuan/tw-weather-alerts">
+                        <div class="hint">使用 git:directory 資源（官方推薦）</div>
+                    </div>
+                    <div class="control-group">
+                        <label>Branch / Tag (選填)</label>
+                        <input type="text" id="githubRef" placeholder="預設: main（留空自動使用 main 分支）">
+                    </div>
+                    <div class="control-group">
+                        <label>外掛目錄名稱 (選填)</label>
+                        <input type="text" id="pluginDirName" placeholder="自動從 repo 名稱推斷">
+                        <div class="hint">⚠️ 外掛須符合 WP 標準：根目錄需有包含標頭註釋的主 PHP 檔</div>
+                    </div>
+                </div>
+
+                <div id="plugin-proxy" class="plugin-input-group">
+                    <div class="control-group">
+                        <label>GitHub Proxy URL</label>
+                        <input type="url" id="proxyUrl" placeholder="https://github-proxy.com/proxy/?repo=user/repo">
+                        <div class="hint">⚠️ GitHub Proxy 即將停用，建議使用 GitHub 選項</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📍 導航設定</div>
+                <div class="control-group">
+                    <label>Landing Page</label>
+                    <select id="landingPage">
+                        <option value="/wp-admin/">WordPress 後台首頁</option>
+                        <option value="/wp-admin/plugins.php">外掛管理頁面</option>
+                        <option value="/wp-admin/options-general.php">一般設定</option>
+                        <option value="/">前台首頁</option>
+                        <option value="custom">自訂路徑...</option>
+                    </select>
+                </div>
+                <div class="control-group" id="customLandingGroup" style="display:none;">
+                    <label>自訂路徑</label>
+                    <input type="text" id="customLanding" placeholder="/wp-admin/options-general.php?page=your-plugin">
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="autoLogin" checked>
+                        <span>自動登入管理員帳號</span>
+                    </label>
+                    <div class="hint" id="loginHint" style="display:none; color: var(--warning);">
+                        💡 前台首頁無需登入，但登入可讓您在前台工具列快速切換
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🌐 語系與時區</div>
+                <div class="control-group">
+                    <label>預設語系</label>
+                    <select id="siteLanguage">
+                        <option value="zh_TW" selected>繁體中文 (zh_TW)</option>
+                        <option value="zh_CN">簡體中文 (zh_CN)</option>
+                        <option value="en_US">English (en_US)</option>
+                        <option value="ja">日本語 (ja)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="setTimezone" checked>
+                        <span>設定時區為 Asia/Taipei (UTC+8)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <button id="btnLaunch" class="btn btn-primary" onclick="launchPlayground()">
+                🚀 啟動 Playground
+            </button>
+            <button id="btnRestart" class="btn btn-primary" style="display:none; background: var(--warning);"
+                onclick="restartPlayground()">
+                🔄 重新啟動
+            </button>
+            <button class="btn btn-secondary" onclick="showBlueprintTab()">
+                📋 查看 Blueprint JSON
+            </button>
         </div>
     </div>
 
-    <div id="tab-blueprint" class="tab-content">
-        <div class="blueprint-container">
-            <div class="blueprint-toolbar">
-                <div class="blueprint-toolbar-left">
-                    <span class="status-badge info">💡 即時預覽</span>
-                    Blueprint 會根據設定自動更新
+    <div class="main-area">
+        <div class="tabs-bar">
+            <button class="tab-btn active" data-tab="preview">預覽環境</button>
+            <button class="tab-btn" data-tab="blueprint">Blueprint JSON</button>
+        </div>
+
+        <div id="tab-preview" class="tab-content active">
+            <div class="preview-container">
+                <div id="debugBanner" class="debug-banner">
+                    <span class="debug-banner-icon">🐛</span>
+                    <span>除錯模式已啟用 - 錯誤訊息將顯示在頁面上</span>
                 </div>
-                <div class="blueprint-toolbar-right">
-                    <button class="toolbar-btn warning" id="btnResetBlueprint" onclick="resetBlueprint()" style="display:none;">
-                        🔄 重置設定
-                    </button>
-                    <button class="toolbar-btn" onclick="copyBlueprint()">
-                        <span id="copyIcon">📋</span> 複製 JSON
-                    </button>
-                    <button class="toolbar-btn" onclick="copyPlaygroundUrl()">
-                        🔗 複製 URL
-                    </button>
+                <div id="previewPlaceholder" class="preview-placeholder">
+                    <div class="preview-icon">🎮</div>
+                    <div>
+                        <h3 style="margin-bottom: 8px;">準備就緒</h3>
+                        <p>設定完成後，點擊「啟動 Playground」開始</p>
+                    </div>
                 </div>
+                <iframe id="wpFrame" title="WordPress Playground"></iframe>
             </div>
-            <div class="blueprint-code">
-                <textarea id="blueprintEditor" spellcheck="false"></textarea>
-            </div>
-            <div style="padding: 0 20px 20px;">
-                <div class="url-display">
-                    <div class="url-display-label">Playground URL</div>
-                    <div class="url-display-content">
-                        <input type="text" id="playgroundUrl" readonly>
-                        <button onclick="copyPlaygroundUrl()">複製</button>
+        </div>
+
+        <div id="tab-blueprint" class="tab-content">
+            <div class="blueprint-container">
+                <div class="blueprint-toolbar">
+                    <div class="blueprint-toolbar-left">
+                        <span class="status-badge info">💡 即時預覽</span>
+                        Blueprint 會根據設定自動更新
+                    </div>
+                    <div class="blueprint-toolbar-right">
+                        <button class="toolbar-btn warning" id="btnResetBlueprint" onclick="resetBlueprint()"
+                            style="display:none;">
+                            🔄 重置設定
+                        </button>
+                        <button class="toolbar-btn" onclick="copyBlueprint()">
+                            <span id="copyIcon">📋</span> 複製 JSON
+                        </button>
+                        <button class="toolbar-btn" onclick="copyPlaygroundUrl()">
+                            🔗 複製 URL
+                        </button>
+                    </div>
+                </div>
+                <div class="blueprint-code">
+                    <textarea id="blueprintEditor" spellcheck="false"></textarea>
+                </div>
+                <div style="padding: 0 20px 20px;">
+                    <div class="url-display">
+                        <div class="url-display-label">Playground URL</div>
+                        <div class="url-display-content">
+                            <input type="text" id="playgroundUrl" readonly>
+                            <button onclick="copyPlaygroundUrl()">複製</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="app.js"></script>
+    <script src="app.js"></script>
 
 </body>
+
 </html>

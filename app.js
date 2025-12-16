@@ -133,13 +133,17 @@ update_option('gmt_offset', 8);
         // but the label '外掛目錄名稱' suggests destination. 
         // Let's assume '.' for now to fix the reported issue.
 
+        // 使用 refs/heads/main 格式，更穩定
+        const effectiveRef = githubRef === 'HEAD' || githubRef === ''
+            ? 'refs/heads/main'
+            : (githubRef.startsWith('refs/') ? githubRef : `refs/heads/${githubRef}`);
+
         blueprint.steps.push({
             step: 'installPlugin',
             pluginData: {
                 resource: 'git:directory',
                 url: repoUrl,
-                ref: githubRef,
-                refType: githubRef === 'HEAD' ? 'refname' : 'refname',
+                ref: effectiveRef,
                 path: '.'
             }
         });
