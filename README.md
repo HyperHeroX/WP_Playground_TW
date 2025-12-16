@@ -147,3 +147,22 @@ python -m http.server 8080
 ## License
 
 MIT License
+
+---
+
+## 版本紀錄
+
+### v1.1.0 (2025-12-16)
+
+- 🐛 修正 GitHub 外掛安裝時 `path` 參數錯誤導致安裝失敗的問題
+- 🔧 移除不必要的 `refType` 欄位
+- ✨ 優化 `ref` 預設值，改用 `refs/heads/main` 格式
+- 📝 更新 UI 提示文字
+
+### v1.0.0
+
+- 🎉 初始版本
+- Blueprint 視覺化產生器
+- 支援 WordPress.org、GitHub、GitHub Proxy 三種外掛安裝方式
+- 繁體中文預設語系與時區設定
+- WP_DEBUG 除錯模式選項
